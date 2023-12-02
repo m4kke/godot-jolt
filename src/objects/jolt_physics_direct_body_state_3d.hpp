@@ -49,6 +49,8 @@ public:
 
 	void _apply_impulse(const Vector3& p_impulse, const Vector3& p_position) override;
 
+  void apply_buoyancy_impulse(const Vector3& p_surface_position, const Vector3& p_surface_normal, float p_buoyancy, float p_linear_drag, float p_angular_drag, const Vector3& p_fluid_velocity, const float p_delta_time);
+
 	void _apply_torque_impulse(const Vector3& p_impulse) override;
 
 	void _apply_central_force(const Vector3& p_force) override;

@@ -292,6 +292,8 @@ public:
 	void _body_apply_impulse(const RID& p_body, const Vector3& p_impulse, const Vector3& p_position)
 		override;
 
+  void body_apply_buoyancy_impulse(const RID& p_body, const Vector3& p_surface_position, const Vector3& p_surface_normal, float p_buoyancy, float p_linear_drag, float p_angular_drag, const Vector3& p_fluid_velocity, float p_delta_time);
+
 	void _body_apply_torque_impulse(const RID& p_body, const Vector3& p_impulse) override;
 
 	void _body_apply_central_force(const RID& p_body, const Vector3& p_force) override;

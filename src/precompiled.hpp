@@ -31,6 +31,7 @@
 #include <godot_cpp/classes/physics_server3d_manager.hpp>
 #include <godot_cpp/classes/physics_server3d_rendering_server_handler.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
+#include <godot_cpp/classes/rigid_body3d.hpp>
 #include <godot_cpp/classes/worker_thread_pool.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>

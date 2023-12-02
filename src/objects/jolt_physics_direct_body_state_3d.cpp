@@ -102,6 +102,19 @@ void JoltPhysicsDirectBodyState3D::_apply_impulse(
 	return body->apply_impulse(p_impulse, p_position);
 }
 
+void JoltPhysicsDirectBodyState3D::apply_buoyancy_impulse(
+    const Vector3& p_surface_position,
+    const Vector3& p_surface_normal,
+    float p_buoyancy,
+    float p_linear_drag,
+    float p_angular_drag,
+    const Vector3& p_fluid_velocity,
+    const float p_delta_time
+) {
+  QUIET_FAIL_NULL_ED(body);
+  return body->apply_buoyancy_impulse(p_surface_position, p_surface_normal, p_buoyancy, p_linear_drag, p_angular_drag, p_fluid_velocity, p_delta_time);
+}
+
 void JoltPhysicsDirectBodyState3D::_apply_torque_impulse(const Vector3& p_impulse) {
 	QUIET_FAIL_NULL_ED(body);
 	return body->apply_torque_impulse(p_impulse);
