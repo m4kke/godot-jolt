@@ -46,8 +46,8 @@ JoltSpace3D::JoltSpace3D(JPH::JobSystem* p_job_system)
 	settings.mPenetrationSlop = JoltProjectSettings::get_contact_penetration();
 	settings.mLinearCastThreshold = JoltProjectSettings::get_ccd_movement_threshold();
 	settings.mLinearCastMaxPenetration = JoltProjectSettings::get_ccd_max_penetration();
-	settings.mNumVelocitySteps = JoltProjectSettings::get_velocity_iterations();
-	settings.mNumPositionSteps = JoltProjectSettings::get_position_iterations();
+	settings.mNumVelocitySteps = (JPH::uint)JoltProjectSettings::get_velocity_iterations();
+	settings.mNumPositionSteps = (JPH::uint)JoltProjectSettings::get_position_iterations();
 	settings.mMinVelocityForRestitution = JoltProjectSettings::get_bounce_velocity_threshold();
 	settings.mTimeBeforeSleep = JoltProjectSettings::get_sleep_time_threshold();
 	settings.mPointVelocitySleepThreshold = JoltProjectSettings::get_sleep_velocity_threshold();
@@ -270,33 +270,15 @@ void JoltSpace3D::set_param(
 	}
 }
 
-JPH::BodyInterface& JoltSpace3D::get_body_iface([[maybe_unused]] bool p_locked) {
-#ifndef GDJ_CONFIG_DISTRIBUTION
-	if (p_locked && body_accessor.not_acquired()) {
-		return physics_system->GetBodyInterface();
-	}
-#endif // GDJ_CONFIG_DISTRIBUTION
-
+JPH::BodyInterface& JoltSpace3D::get_body_iface() {
 	return physics_system->GetBodyInterfaceNoLock();
 }
 
-const JPH::BodyInterface& JoltSpace3D::get_body_iface([[maybe_unused]] bool p_locked) const {
-#ifndef GDJ_CONFIG_DISTRIBUTION
-	if (p_locked && body_accessor.not_acquired()) {
-		return physics_system->GetBodyInterface();
-	}
-#endif // GDJ_CONFIG_DISTRIBUTION
-
+const JPH::BodyInterface& JoltSpace3D::get_body_iface() const {
 	return physics_system->GetBodyInterfaceNoLock();
 }
 
-const JPH::BodyLockInterface& JoltSpace3D::get_lock_iface([[maybe_unused]] bool p_locked) const {
-#ifndef GDJ_CONFIG_DISTRIBUTION
-	if (p_locked && body_accessor.not_acquired()) {
-		return physics_system->GetBodyLockInterface();
-	}
-#endif // GDJ_CONFIG_DISTRIBUTION
-
+const JPH::BodyLockInterface& JoltSpace3D::get_lock_iface() const {
 	return physics_system->GetBodyLockInterfaceNoLock();
 }
 
@@ -304,14 +286,7 @@ const JPH::BroadPhaseQuery& JoltSpace3D::get_broad_phase_query() const {
 	return physics_system->GetBroadPhaseQuery();
 }
 
-const JPH::NarrowPhaseQuery& JoltSpace3D::get_narrow_phase_query([[maybe_unused]] bool p_locked
-) const {
-#ifndef GDJ_CONFIG_DISTRIBUTION
-	if (p_locked && body_accessor.not_acquired()) {
-		return physics_system->GetNarrowPhaseQuery();
-	}
-#endif // GDJ_CONFIG_DISTRIBUTION
-
+const JPH::NarrowPhaseQuery& JoltSpace3D::get_narrow_phase_query() const {
 	return physics_system->GetNarrowPhaseQueryNoLock();
 }
 
@@ -337,36 +312,30 @@ void JoltSpace3D::map_from_object_layer(
 	);
 }
 
-JoltReadableBody3D JoltSpace3D::read_body(const JPH::BodyID& p_body_id, bool p_lock) const {
-	return {*this, p_body_id, p_lock};
+JoltReadableBody3D JoltSpace3D::read_body(const JPH::BodyID& p_body_id) const {
+	return {*this, p_body_id};
 }
 
-JoltReadableBody3D JoltSpace3D::read_body(const JoltObjectImpl3D& p_object, bool p_lock) const {
-	return read_body(p_object.get_jolt_id(), p_lock);
+JoltReadableBody3D JoltSpace3D::read_body(const JoltObjectImpl3D& p_object) const {
+	return read_body(p_object.get_jolt_id());
 }
 
-JoltWritableBody3D JoltSpace3D::write_body(const JPH::BodyID& p_body_id, bool p_lock) const {
-	return {*this, p_body_id, p_lock};
+JoltWritableBody3D JoltSpace3D::write_body(const JPH::BodyID& p_body_id) const {
+	return {*this, p_body_id};
 }
 
-JoltWritableBody3D JoltSpace3D::write_body(const JoltObjectImpl3D& p_object, bool p_lock) const {
-	return write_body(p_object.get_jolt_id(), p_lock);
+JoltWritableBody3D JoltSpace3D::write_body(const JoltObjectImpl3D& p_object) const {
+	return write_body(p_object.get_jolt_id());
 }
 
-JoltReadableBodies3D JoltSpace3D::read_bodies(
-	const JPH::BodyID* p_body_ids,
-	int32_t p_body_count,
-	bool p_lock
-) const {
-	return {*this, p_body_ids, p_body_count, p_lock};
+JoltReadableBodies3D JoltSpace3D::read_bodies(const JPH::BodyID* p_body_ids, int32_t p_body_count)
+	const {
+	return {*this, p_body_ids, p_body_count};
 }
 
-JoltWritableBodies3D JoltSpace3D::write_bodies(
-	const JPH::BodyID* p_body_ids,
-	int32_t p_body_count,
-	bool p_lock
-) const {
-	return {*this, p_body_ids, p_body_count, p_lock};
+JoltWritableBodies3D JoltSpace3D::write_bodies(const JPH::BodyID* p_body_ids, int32_t p_body_count)
+	const {
+	return {*this, p_body_ids, p_body_count};
 }
 
 JoltPhysicsDirectSpaceState3D* JoltSpace3D::get_direct_state() {
@@ -465,7 +434,7 @@ void JoltSpace3D::set_max_debug_contacts(int32_t p_count) {
 #endif // GDJ_CONFIG_EDITOR
 
 void JoltSpace3D::_pre_step(float p_step) {
-	body_accessor.acquire_all(true);
+	body_accessor.acquire_all();
 
 	contact_listener->pre_step();
 
@@ -477,7 +446,7 @@ void JoltSpace3D::_pre_step(float p_step) {
 
 			object->pre_step(p_step, *jolt_body);
 
-			if (object->generates_contacts()) {
+			if (object->reports_contacts()) {
 				contact_listener->listen_for(object);
 			}
 		}
@@ -487,7 +456,7 @@ void JoltSpace3D::_pre_step(float p_step) {
 }
 
 void JoltSpace3D::_post_step(float p_step) {
-	body_accessor.acquire_all(true);
+	body_accessor.acquire_all();
 
 	contact_listener->post_step();
 

@@ -9,6 +9,48 @@ Breaking changes are denoted with ⚠️.
 
 ## [Unreleased]
 
+### Changed
+
+- ⚠️ Changed so that single-body joints now implicitly sets `node_a` to be the "world node" rather
+  than `node_b`. This diverges from how Godot Physics behaves, but matches how Bullet behaves in
+  Godot 3, and yields more intuitive outcomes for the 6DOF joints.
+- ⚠️ Changed `Generic6DOFJoint3D` and `ConeTwistJointImpl3D`, as well as their substitute joints, to
+  use pyramid-shaped angular limits instead of cone-shaped limits, to better match Godot Physics.
+- ⚠️ Reversed the direction of the `equilibrium_point` properties for `Generic6DOFJoint3D` and
+  `JoltGeneric6DOFJoint3D`, to match the direction of the angular limits.
+- ⚠️ Changed the rotation order of the `equilibrium_point` properties for `Generic6DOFJoint3D` and
+  `JoltGeneric6DOFJoint3D`, from ZXY to XYZ, to match the rotation order of the angular limits.
+- Mirrored the way in which linear limits are visualized for `JoltSliderJoint3D` and
+  `JoltGeneric6DOFJoint3D`.
+
+### Added
+
+- Added new project setting, "World Node", for controlling which of the two nodes in a single-body
+  joint becomes the "world node" when omitting one of the nodes. This allows for reverting back to
+  the behavior of Godot Physics if needed, effectively undoing the breaking change mentioned above.
+- Added new project setting, "Report All Kinematic Contacts", for allowing `RigidBody3D` frozen with
+  `FREEZE_MODE_KINEMATIC` to report contacts/collisions with other kinematic/static bodies, at a
+  potentially heavy performance/memory cost.
+- Added support for using NaN to indicate holes in `HeightMapShape3D`.
+- Added support for holes in a non-square `HeightMapShape3D`.
+
+### Fixed
+
+- ⚠️ Fixed issue with non-square `HeightMapShape3D` not using back-face collision.
+- Fixed issue where contact shape indices would sometimes always be the same index across all
+  contacts with a particular body.
+- Fixed runtime crash when setting the `max_contacts_reported` property to a lower value.
+- Fixed issue where `Generic6DOFJoint3D` and `JoltGeneric6DOFJoint3D` would yield odd limit shapes
+  when using both linear and angular asymmetrical limits.
+- Fixed issue where the equilibrium point for `Generic6DOFJoint3D` and `JoltGeneric6DOFJoint3D`
+  would be moved when using asymmetrical limits.
+- Fixed crash that could occur under rare circumstances when shutting down the editor after having
+  added/removed collision shapes.
+- Fixed issue where a `RigidBody3D` with locked axes colliding with a `StaticBody3D` (or another
+  frozen `RigidBody3D` using `FREEZE_MODE_STATIC`) would result in NaNs.
+- Fixed issue where `HingeJoint3D` and `JoltHingeJoint3D` would sometimes dull forces applied to
+  either of its bodies when at either of its limits.
+
 ## [0.11.0] - 2023-12-01
 
 ### Changed

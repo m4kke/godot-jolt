@@ -22,11 +22,10 @@ JoltGeneric6DOFJointImpl3D::JoltGeneric6DOFJointImpl3D(
 	JoltBodyImpl3D* p_body_a,
 	JoltBodyImpl3D* p_body_b,
 	const Transform3D& p_local_ref_a,
-	const Transform3D& p_local_ref_b,
-	bool p_lock
+	const Transform3D& p_local_ref_b
 )
 	: JoltJointImpl3D(p_old_joint, p_body_a, p_body_b, p_local_ref_a, p_local_ref_b) {
-	rebuild(p_lock);
+	rebuild();
 }
 
 double JoltGeneric6DOFJointImpl3D::get_param(Axis p_axis, Param p_param) const {
@@ -106,23 +105,18 @@ double JoltGeneric6DOFJointImpl3D::get_param(Axis p_axis, Param p_param) const {
 	}
 }
 
-void JoltGeneric6DOFJointImpl3D::set_param(
-	Axis p_axis,
-	Param p_param,
-	double p_value,
-	bool p_lock
-) {
+void JoltGeneric6DOFJointImpl3D::set_param(Axis p_axis, Param p_param, double p_value) {
 	const int32_t axis_lin = AXES_LINEAR + (int32_t)p_axis;
 	const int32_t axis_ang = AXES_ANGULAR + (int32_t)p_axis;
 
 	switch ((int32_t)p_param) {
 		case PhysicsServer3D::G6DOF_JOINT_LINEAR_LOWER_LIMIT: {
 			limit_lower[axis_lin] = p_value;
-			_limits_changed(p_lock);
+			_limits_changed();
 		} break;
 		case PhysicsServer3D::G6DOF_JOINT_LINEAR_UPPER_LIMIT: {
 			limit_upper[axis_lin] = p_value;
-			_limits_changed(p_lock);
+			_limits_changed();
 		} break;
 		case PhysicsServer3D::G6DOF_JOINT_LINEAR_LIMIT_SOFTNESS: {
 			if (!Math::is_equal_approx(p_value, DEFAULT_LINEAR_LIMIT_SOFTNESS)) {
@@ -176,11 +170,11 @@ void JoltGeneric6DOFJointImpl3D::set_param(
 		} break;
 		case PhysicsServer3D::G6DOF_JOINT_ANGULAR_LOWER_LIMIT: {
 			limit_lower[axis_ang] = p_value;
-			_limits_changed(p_lock);
+			_limits_changed();
 		} break;
 		case PhysicsServer3D::G6DOF_JOINT_ANGULAR_UPPER_LIMIT: {
 			limit_upper[axis_ang] = p_value;
-			_limits_changed(p_lock);
+			_limits_changed();
 		} break;
 		case PhysicsServer3D::G6DOF_JOINT_ANGULAR_LIMIT_SOFTNESS: {
 			if (!Math::is_equal_approx(p_value, DEFAULT_ANGULAR_LIMIT_SOFTNESS)) {
@@ -287,18 +281,18 @@ bool JoltGeneric6DOFJointImpl3D::get_flag(Axis p_axis, Flag p_flag) const {
 	}
 }
 
-void JoltGeneric6DOFJointImpl3D::set_flag(Axis p_axis, Flag p_flag, bool p_enabled, bool p_lock) {
+void JoltGeneric6DOFJointImpl3D::set_flag(Axis p_axis, Flag p_flag, bool p_enabled) {
 	const int32_t axis_lin = AXES_LINEAR + (int32_t)p_axis;
 	const int32_t axis_ang = AXES_ANGULAR + (int32_t)p_axis;
 
 	switch ((int32_t)p_flag) {
 		case PhysicsServer3D::G6DOF_JOINT_FLAG_ENABLE_LINEAR_LIMIT: {
 			limit_enabled[axis_lin] = p_enabled;
-			_limits_changed(p_lock);
+			_limits_changed();
 		} break;
 		case PhysicsServer3D::G6DOF_JOINT_FLAG_ENABLE_ANGULAR_LIMIT: {
 			limit_enabled[axis_ang] = p_enabled;
-			_limits_changed(p_lock);
+			_limits_changed();
 		} break;
 		case JoltPhysicsServer3D::G6DOF_JOINT_FLAG_ENABLE_ANGULAR_SPRING: {
 			spring_enabled[axis_ang] = p_enabled;
@@ -345,12 +339,7 @@ double JoltGeneric6DOFJointImpl3D::get_jolt_param(Axis p_axis, JoltParam p_param
 	}
 }
 
-void JoltGeneric6DOFJointImpl3D::set_jolt_param(
-	Axis p_axis,
-	JoltParam p_param,
-	double p_value,
-	[[maybe_unused]] bool p_lock
-) {
+void JoltGeneric6DOFJointImpl3D::set_jolt_param(Axis p_axis, JoltParam p_param, double p_value) {
 	const int32_t axis_lin = AXES_LINEAR + (int32_t)p_axis;
 	const int32_t axis_ang = AXES_ANGULAR + (int32_t)p_axis;
 
@@ -397,12 +386,7 @@ bool JoltGeneric6DOFJointImpl3D::get_jolt_flag(Axis p_axis, JoltFlag p_flag) con
 	}
 }
 
-void JoltGeneric6DOFJointImpl3D::set_jolt_flag(
-	Axis p_axis,
-	JoltFlag p_flag,
-	bool p_enabled,
-	[[maybe_unused]] bool p_lock
-) {
+void JoltGeneric6DOFJointImpl3D::set_jolt_flag(Axis p_axis, JoltFlag p_flag, bool p_enabled) {
 	const int32_t axis_lin = AXES_LINEAR + (int32_t)p_axis;
 	const int32_t axis_ang = AXES_ANGULAR + (int32_t)p_axis;
 
@@ -451,7 +435,7 @@ float JoltGeneric6DOFJointImpl3D::get_applied_torque() const {
 	return constraint->GetTotalLambdaRotation().Length() / last_step;
 }
 
-void JoltGeneric6DOFJointImpl3D::rebuild(bool p_lock) {
+void JoltGeneric6DOFJointImpl3D::rebuild() {
 	destroy();
 
 	JoltSpace3D* space = get_space();
@@ -460,84 +444,23 @@ void JoltGeneric6DOFJointImpl3D::rebuild(bool p_lock) {
 		return;
 	}
 
-	JPH::BodyID body_ids[2] = {body_a->get_jolt_id()};
-	int32_t body_count = 1;
+	const JPH::BodyID body_ids[2] = {
+		body_a != nullptr ? body_a->get_jolt_id() : JPH::BodyID(),
+		body_b != nullptr ? body_b->get_jolt_id() : JPH::BodyID()};
 
-	if (body_b != nullptr) {
-		body_ids[1] = body_b->get_jolt_id();
-		body_count = 2;
-	}
+	const JoltWritableBodies3D jolt_bodies = space->write_bodies(body_ids, count_of(body_ids));
 
-	const JoltWritableBodies3D bodies = space->write_bodies(body_ids, body_count, p_lock);
+	auto* jolt_body_a = static_cast<JPH::Body*>(jolt_bodies[0]);
+	auto* jolt_body_b = static_cast<JPH::Body*>(jolt_bodies[1]);
 
-	JPH::SixDOFConstraintSettings constraint_settings;
-
-	float ref_shift[AXIS_COUNT] = {};
-
-	for (int32_t axis = 0; axis < AXIS_COUNT; ++axis) {
-		if (!limit_enabled[axis]) {
-			constraint_settings.MakeFreeAxis((JoltAxis)axis);
-			continue;
-		}
-
-		const double lower = limit_lower[axis];
-		const double upper = limit_upper[axis];
-
-		if (lower > upper) {
-			// HACK(mihe): This seems to emulate the behavior of Godot Physics, where if the limits
-			// result in a negative span then the axis becomes unbounded.
-			constraint_settings.MakeFreeAxis((JoltAxis)axis);
-		} else {
-			const double midpoint = (lower + upper) / 2.0f;
-
-			ref_shift[axis] = (float)-midpoint;
-
-			if (Math::is_equal_approx(lower, upper)) {
-				constraint_settings.MakeFixedAxis((JoltAxis)axis);
-			} else {
-				const auto extent = float(upper - midpoint);
-				constraint_settings.SetLimitedAxis((JoltAxis)axis, -extent, extent);
-			}
-		}
-	}
-
-	const Vector3 linear_shift = {
-		ref_shift[AXIS_LINEAR_X],
-		ref_shift[AXIS_LINEAR_Y],
-		ref_shift[AXIS_LINEAR_Z]};
-
-	const Vector3 angular_shift = {
-		ref_shift[AXIS_ANGULAR_X],
-		ref_shift[AXIS_ANGULAR_Y],
-		ref_shift[AXIS_ANGULAR_Z]};
+	ERR_FAIL_COND(jolt_body_a == nullptr && jolt_body_b == nullptr);
 
 	Transform3D shifted_ref_a;
 	Transform3D shifted_ref_b;
 
-	_shift_reference_frames(linear_shift, angular_shift, shifted_ref_a, shifted_ref_b);
+	_shift_reference_frames(Vector3(), Vector3(), shifted_ref_a, shifted_ref_b);
 
-	constraint_settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
-	constraint_settings.mPosition1 = to_jolt(shifted_ref_a.origin);
-	constraint_settings.mAxisX1 = to_jolt(shifted_ref_a.basis.get_column(Vector3::AXIS_X));
-	constraint_settings.mAxisY1 = to_jolt(shifted_ref_a.basis.get_column(Vector3::AXIS_Y));
-	constraint_settings.mPosition2 = to_jolt(shifted_ref_b.origin);
-	constraint_settings.mAxisX2 = to_jolt(shifted_ref_b.basis.get_column(Vector3::AXIS_X));
-	constraint_settings.mAxisY2 = to_jolt(shifted_ref_b.basis.get_column(Vector3::AXIS_Y));
-
-	if (body_b != nullptr) {
-		const JoltWritableBody3D jolt_body_a = bodies[0];
-		ERR_FAIL_COND(jolt_body_a.is_invalid());
-
-		const JoltWritableBody3D jolt_body_b = bodies[1];
-		ERR_FAIL_COND(jolt_body_b.is_invalid());
-
-		jolt_ref = constraint_settings.Create(*jolt_body_a, *jolt_body_b);
-	} else {
-		const JoltWritableBody3D jolt_body_a = bodies[0];
-		ERR_FAIL_COND(jolt_body_a.is_invalid());
-
-		jolt_ref = constraint_settings.Create(*jolt_body_a, JPH::Body::sFixedToWorld);
-	}
+	jolt_ref = _build_6dof(jolt_body_a, jolt_body_b, shifted_ref_a, shifted_ref_b);
 
 	space->add_joint(this);
 
@@ -554,6 +477,49 @@ void JoltGeneric6DOFJointImpl3D::rebuild(bool p_lock) {
 		_update_motor_limit(axis);
 		_update_spring_parameters(axis);
 		_update_spring_equilibrium(axis);
+	}
+}
+
+JPH::Constraint* JoltGeneric6DOFJointImpl3D::_build_6dof(
+	JPH::Body* p_jolt_body_a,
+	JPH::Body* p_jolt_body_b,
+	const Transform3D& p_shifted_ref_a,
+	const Transform3D& p_shifted_ref_b
+) const {
+	JPH::SixDOFConstraintSettings constraint_settings;
+
+	for (int32_t axis = 0; axis < AXIS_COUNT; ++axis) {
+		double lower = limit_lower[axis];
+		double upper = limit_upper[axis];
+
+		if (axis >= AXIS_ANGULAR_X && axis <= AXIS_ANGULAR_Z) {
+			const double temp = lower;
+			lower = -upper;
+			upper = -temp;
+		}
+
+		if (!limit_enabled[axis] || lower > upper) {
+			constraint_settings.MakeFreeAxis((JoltAxis)axis);
+		} else {
+			constraint_settings.SetLimitedAxis((JoltAxis)axis, (float)lower, (float)upper);
+		}
+	}
+
+	constraint_settings.mSpace = JPH::EConstraintSpace::LocalToBodyCOM;
+	constraint_settings.mPosition1 = to_jolt(p_shifted_ref_a.origin);
+	constraint_settings.mAxisX1 = to_jolt(p_shifted_ref_a.basis.get_column(Vector3::AXIS_X));
+	constraint_settings.mAxisY1 = to_jolt(p_shifted_ref_a.basis.get_column(Vector3::AXIS_Y));
+	constraint_settings.mPosition2 = to_jolt(p_shifted_ref_b.origin);
+	constraint_settings.mAxisX2 = to_jolt(p_shifted_ref_b.basis.get_column(Vector3::AXIS_X));
+	constraint_settings.mAxisY2 = to_jolt(p_shifted_ref_b.basis.get_column(Vector3::AXIS_Y));
+	constraint_settings.mSwingType = JPH::ESwingType::Pyramid;
+
+	if (p_jolt_body_a == nullptr) {
+		return constraint_settings.Create(JPH::Body::sFixedToWorld, *p_jolt_body_b);
+	} else if (p_jolt_body_b == nullptr) {
+		return constraint_settings.Create(*p_jolt_body_a, JPH::Body::sFixedToWorld);
+	} else {
+		return constraint_settings.Create(*p_jolt_body_a, *p_jolt_body_b);
 	}
 }
 
@@ -599,7 +565,7 @@ void JoltGeneric6DOFJointImpl3D::_update_motor_velocity(int32_t p_axis) {
 			 (float)motor_speed[AXIS_LINEAR_Z]}
 		);
 	} else {
-		// HACK(mihe): We're forced to flip the direction of these to match Godot Physics.
+		// NOTE(mihe): We flip the direction since Jolt is CCW but Godot is CW.
 		constraint->SetTargetAngularVelocityCS(
 			{(float)-motor_speed[AXIS_ANGULAR_X],
 			 (float)-motor_speed[AXIS_ANGULAR_Y],
@@ -614,9 +580,8 @@ void JoltGeneric6DOFJointImpl3D::_update_motor_limit(int32_t p_axis) {
 
 	JPH::MotorSettings& motor_settings = constraint->GetMotorSettings((JoltAxis)p_axis);
 
-	// HACK(mihe): We only apply the motor limit if we're actually using a velocity motor, since
-	// it would otherwise affect a position motor as well, which doesn't seem to be how this is
-	// applied in the Bullet implementation in Godot 3.
+	// NOTE(mihe): We only apply the motor limit if we're actually using a velocity motor, since it
+	// would otherwise affect a position motor as well.
 	const auto limit = motor_enabled[p_axis] ? (float)motor_limit[p_axis] : FLT_MAX;
 
 	if (p_axis >= AXIS_LINEAR_X && p_axis <= AXIS_LINEAR_Z) {
@@ -649,28 +614,27 @@ void JoltGeneric6DOFJointImpl3D::_update_spring_equilibrium(int32_t p_axis) {
 
 	if (p_axis >= AXIS_LINEAR_X && p_axis <= AXIS_LINEAR_Z) {
 		const Vector3 target_position = Vector3(
-			(float)-spring_equilibrium[AXIS_LINEAR_X],
-			(float)-spring_equilibrium[AXIS_LINEAR_Y],
-			(float)-spring_equilibrium[AXIS_LINEAR_Z]
+			(float)spring_equilibrium[AXIS_LINEAR_X],
+			(float)spring_equilibrium[AXIS_LINEAR_Y],
+			(float)spring_equilibrium[AXIS_LINEAR_Z]
 		);
 
 		constraint->SetTargetPositionCS(to_jolt(target_position));
 	} else {
-		// HACK(mihe): These are flipped to match Bullet in Godot 3, presumably for the same
-		// reason that the angular motor velocity needs to be flipped. Godot 4 does not
-		// currently have springs implemented, so can't be used as a reference.
+		// NOTE(mihe): We flip the direction since Jolt is CCW but Godot is CW.
 		const Basis target_orientation = Basis::from_euler(
-			{(float)spring_equilibrium[AXIS_ANGULAR_X],
-			 (float)spring_equilibrium[AXIS_ANGULAR_Y],
-			 (float)spring_equilibrium[AXIS_ANGULAR_Z]}
+			{(float)-spring_equilibrium[AXIS_ANGULAR_X],
+			 (float)-spring_equilibrium[AXIS_ANGULAR_Y],
+			 (float)-spring_equilibrium[AXIS_ANGULAR_Z]},
+			EULER_ORDER_ZYX
 		);
 
 		constraint->SetTargetOrientationCS(to_jolt(target_orientation));
 	}
 }
 
-void JoltGeneric6DOFJointImpl3D::_limits_changed(bool p_lock) {
-	rebuild(p_lock);
+void JoltGeneric6DOFJointImpl3D::_limits_changed() {
+	rebuild();
 }
 
 void JoltGeneric6DOFJointImpl3D::_limit_spring_parameters_changed(int32_t p_axis) {

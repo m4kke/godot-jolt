@@ -217,6 +217,37 @@ These settings are exposed by Godot Jolt and can be found under "Physics" - "Jol
       </td>
     </tr>
     <tr>
+      <td>Collisions</td>
+      <td>Report All Kinematic Contacts</td>
+      <td>
+        Whether or not a <code>RigidBody3D</code> frozen with <code>FREEZE_MODE_KINEMATIC</code> is
+        able to collide with (and thus reports contacts for) other kinematic/static bodies.
+      </td>
+      <td>
+        ⚠️ Much like the "Areas Detect Static Bodies" setting, this setting can come at a heavy
+        performance and memory cost if you allow many/large frozen kinematic bodies with a non-zero
+        <code>max_contacts_reported</code> to overlap with complex static geometry, such as
+        <code>ConcavePolygonShape3D</code> or <code>HeightMapShape3D</code>.
+        <br><br>It is strongly recommended that you set up your collision layers and masks in such a
+        way that only a few small such kinematic bodies can detect static bodies.
+      </td>
+    </tr>
+    <tr>
+      <td>Joints</td>
+      <td>World Node</td>
+      <td>
+        Which of the two nodes should become the "world node" when omitting one of the nodes.
+      </td>
+      <td>
+        ⚠️ The default value for this setting, "Node A", differs from how this behaves in Godot
+        Physics, where this is effectively "Node B" instead.
+        <br><br>If you need 1-body joints to behave
+        like they do in Godot Physics then change this to "Node B". Note that this can result in
+        strange and unintuitive behavior when combining linear and angular degrees-of-freedom for
+        the 6DOF joint.
+      </td>
+    </tr>
+    <tr>
       <td>Continuous CD</td>
       <td>Movement Threshold</td>
       <td>

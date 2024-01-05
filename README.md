@@ -51,16 +51,18 @@ should not be relied upon if determinism is a hard requirement.
 
 ## What else is different?
 
-- `Area3D` detecting static bodies is opt-in, with a potentially [heavy performance/memory
-  cost][jst]
+- `Area3D` detecting static bodies is opt-in, at a potentially [heavy performance/memory cost][jst]
 - Joints only support soft limits through their substitutes (`JoltHingeJoint3D`, etc.)
 - Springs and linear motors are actually implemented in `Generic6DOFJoint3D`
+- Single-body joints will make `node_a` be the "world node" rather than `node_b`
 - Ray-casts using `hit_back_faces` will hit the back/inside of all shapes, not only concave ones
 - Ray-casts are not affected by the `backface_collision` property of `ConcavePolygonShape3D`
 - Shape-casts should be more accurate, but their cost also scale with the cast distance
 - Shape margins are used, but are treated as an upper bound and scale with the shape's extents
 - Manipulating a body's shape(s) after it has entered a scene tree can be costly
 - Contact impulses are estimations and won't be accurate when colliding with multiple bodies
+- Contact reporting for kinematic bodies is partially opt-in, at a potentially [heavy
+  performance/memory cost][jst]
 
 Also consider this note from Jolt's [documentation][jdc]:
 
@@ -70,11 +72,7 @@ Also consider this note from Jolt's [documentation][jdc]:
 
 ## What versions of Godot are supported?
 
-Currently the **only** supported version is **Godot 4.2**.
-
-Godot Jolt relies on the GDExtension API found in Godot 4 and only supports the latest stable
-version of Godot 4. Any custom build or pre-release of Godot, such as a beta or release candidate,
-may be incompatible and is therefore not supported.
+Currently the **only** supported version is **Godot 4.2** (including 4.2.x).
 
 ## What platforms are supported?
 
