@@ -4,6 +4,7 @@
 #include "objects/jolt_body_impl_3d.hpp"
 #include "servers/jolt_project_settings.hpp"
 #include "spaces/jolt_space_3d.hpp"
+#include <bodies/jolt_buoyant_rigid_body_3d.hpp>
 
 void JoltContactListener3D::listen_for(JoltObjectImpl3D* p_object) {
 	listening_for.insert(p_object->get_jolt_id());
@@ -34,6 +35,7 @@ void JoltContactListener3D::OnContactAdded(
 	_try_apply_surface_velocities(p_body1, p_body2, p_settings);
 	_try_add_contacts(p_body1, p_body2, p_manifold, p_settings);
 	_try_evaluate_area_overlap(p_body1, p_body2, p_manifold);
+	_try_override_friction(p_body1, p_body2, p_settings, p_manifold);
 
 #ifdef GDJ_CONFIG_EDITOR
 	_try_add_debug_contacts(p_body1, p_body2, p_manifold);
@@ -50,6 +52,8 @@ void JoltContactListener3D::OnContactPersisted(
 	_try_apply_surface_velocities(p_body1, p_body2, p_settings);
 	_try_add_contacts(p_body1, p_body2, p_manifold, p_settings);
 	_try_evaluate_area_overlap(p_body1, p_body2, p_manifold);
+	_try_override_friction(p_body1, p_body2, p_settings, p_manifold);
+
 
 #ifdef GDJ_CONFIG_EDITOR
 	_try_add_debug_contacts(p_body1, p_body2, p_manifold);
@@ -286,6 +290,27 @@ bool JoltContactListener3D::_try_evaluate_area_overlap(
 	}
 
 	return true;
+}
+
+void JoltContactListener3D::_try_override_friction(
+	const JPH::Body& p_jolt_body1,
+	const JPH::Body& p_jolt_body2,
+	JPH::ContactSettings& p_settings,
+	const JPH::ContactManifold& p_manifold
+) {
+	const auto* object1 = reinterpret_cast<JoltObjectImpl3D*>(p_jolt_body1.GetUserData())->get_instance_wrapped();
+	if(const auto* buoyant_object1 = Object::cast_to<JoltBuoyantRigidBody3D>(object1)) {
+		if(acosf(-p_manifold.mWorldSpaceNormal.Dot(JPH::Vec3(0.0f, 1.0f, 0.0f))) > buoyant_object1->get_slide_angle_threshold()) {
+			p_settings.mCombinedFriction = 0.0f;
+		}
+	}
+	const auto* object2 = reinterpret_cast<JoltObjectImpl3D*>(p_jolt_body2.GetUserData())->get_instance_wrapped();
+	if(const auto* buoyant_object2 = Object::cast_to<JoltBuoyantRigidBody3D>(object2)) {
+		if(acosf((p_manifold.mWorldSpaceNormal).Dot(JPH::Vec3(0.0f, 1.0f, 0.0f))) > buoyant_object2->get_slide_angle_threshold()) {
+			p_settings.mCombinedFriction = 0.0f;
+		}
+	}
+
 }
 
 bool JoltContactListener3D::_try_remove_contacts(const JPH::SubShapeIDPair& p_shape_pair) {

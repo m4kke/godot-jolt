@@ -118,6 +118,14 @@ private:
 		const JPH::ContactManifold& p_manifold
 	);
 
+
+	void _try_override_friction(
+		const JPH::Body& p_jolt_body1,
+		const JPH::Body& p_jolt_body2,
+		JPH::ContactSettings& p_settings,
+		const JPH::ContactManifold& p_manifold
+	);
+
 	bool _try_remove_contacts(const JPH::SubShapeIDPair& p_shape_pair);
 
 	bool _try_remove_area_overlap(const JPH::SubShapeIDPair& p_shape_pair);

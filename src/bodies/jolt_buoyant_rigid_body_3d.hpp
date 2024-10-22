@@ -16,6 +16,8 @@ public:
   void set_angular_drag(float p_angular_drag);
   float get_angular_drag() const;
 
+    void set_slide_angle_threshold(float p_slide_angle_threshold);
+  float get_slide_angle_threshold() const;
   void _integrate_forces(PhysicsDirectBodyState3D* p_body_state);
 
   JoltBuoyantRigidBody3D();
@@ -27,5 +29,6 @@ private:
   float buoyancy = 1.0;
   float linear_drag = 0.0;
   float angular_drag = 0.0;
+  float slide_angle_threshold = 2.0f * JPH::JPH_PI;
 };
 

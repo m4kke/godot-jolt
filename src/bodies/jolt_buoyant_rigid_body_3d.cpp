@@ -20,6 +20,8 @@ void JoltBuoyantRigidBody3D::_bind_methods() {
   BIND_METHOD(JoltBuoyantRigidBody3D, get_angular_drag);
   BIND_METHOD(JoltBuoyantRigidBody3D, set_angular_drag, "angular_drag");
 
+  BIND_METHOD(JoltBuoyantRigidBody3D, get_slide_angle_threshold);
+  BIND_METHOD(JoltBuoyantRigidBody3D, set_slide_angle_threshold, "slide_angle_threshold");
   ADD_PROPERTY(PropertyInfo(Variant::PLANE, "liquid_plane", PROPERTY_HINT_NONE, "suffix:m"), "set_liquid_plane", "get_liquid_plane");
   ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buoyancy", PROPERTY_HINT_RANGE, "0.0,2.0,0.1,or_greater"), "set_buoyancy", "get_buoyancy");
   ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "linear_drag", PROPERTY_HINT_RANGE, "0.0,2.0,0.1,or_greater"), "set_linear_drag", "get_linear_drag");
@@ -62,6 +64,13 @@ float JoltBuoyantRigidBody3D::get_angular_drag() const {
 }
 
 void JoltBuoyantRigidBody3D::_integrate_forces(PhysicsDirectBodyState3D* p_state) {
+void JoltBuoyantRigidBody3D::set_slide_angle_threshold(float p_slide_angle_threshold) {
+	slide_angle_threshold = p_slide_angle_threshold;
+}
+
+float JoltBuoyantRigidBody3D::get_slide_angle_threshold() const {
+	return slide_angle_threshold;
+}
   JoltPhysicsDirectBodyState3D* p_jolt_state = (JoltPhysicsDirectBodyState3D*) p_state;
   p_jolt_state->apply_buoyancy_impulse(
       get_liquid_plane().center(),
