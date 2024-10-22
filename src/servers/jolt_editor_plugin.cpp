@@ -14,6 +14,7 @@ void JoltEditorPlugin::_enter_tree() {
 	Ref<Texture2D> icon_slider = editor_theme->get_icon("SliderJoint3D", "EditorIcons");
 	Ref<Texture2D> icon_cone_twist = editor_theme->get_icon("ConeTwistJoint3D", "EditorIcons");
 	Ref<Texture2D> icon_6dof = editor_theme->get_icon("Generic6DOFJoint3D", "EditorIcons");
+  Ref<Texture2D> rigid_body = editor_theme->get_icon("RigidBody3D", "EditorIcons");
 
 	Ref<Theme> temp_theme = Ref(memnew(Theme));
 
@@ -22,6 +23,7 @@ void JoltEditorPlugin::_enter_tree() {
 	temp_theme->set_icon("JoltSliderJoint3D", "EditorIcons", icon_slider);
 	temp_theme->set_icon("JoltConeTwistJoint3D", "EditorIcons", icon_cone_twist);
 	temp_theme->set_icon("JoltGeneric6DOFJoint3D", "EditorIcons", icon_6dof);
+  temp_theme->set_icon("JoltBuoyantRigidBody3D", "EditorIcons", rigid_body);
 
 	editor_theme->merge_with(temp_theme);
 

@@ -629,6 +629,14 @@ void JoltBodyImpl3D::apply_central_impulse(const Vector3& p_impulse) {
 	_motion_changed();
 }
 
+void JoltBodyImpl3D::apply_buoyancy_impulse(const Vector3& surfacePosition, const Vector3& surfaceNormal, const float buoyancy, const float linear_drag, const float angular_drag, const Vector3& fluid_velocity, const float delta_time) {
+	const JoltWritableBody3D body = space->write_body(jolt_id);
+
+  body->ApplyBuoyancyImpulse(to_jolt(surfacePosition), to_jolt(surfaceNormal), buoyancy, linear_drag, angular_drag, to_jolt(fluid_velocity), to_jolt(get_gravity()), delta_time);
+
+	_motion_changed();
+}
+
 void JoltBodyImpl3D::apply_torque(const Vector3& p_torque) {
 	ERR_FAIL_NULL_MSG(
 		space,

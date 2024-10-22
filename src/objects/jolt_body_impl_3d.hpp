@@ -131,6 +131,8 @@ public:
 
 	void apply_central_impulse(const Vector3& p_impulse);
 
+  void apply_buoyancy_impulse(const Vector3& surfacePosition, const Vector3& surfaceNormal, float buoyancy, float linear_drag, float angular_drag, const Vector3& fluid_velocity, const float delta_time);
+
 	void apply_torque(const Vector3& p_torque);
 
 	void apply_torque_impulse(const Vector3& p_impulse);

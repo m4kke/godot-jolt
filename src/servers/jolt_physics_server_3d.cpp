@@ -83,6 +83,8 @@ void JoltPhysicsServer3D::_bind_methods() {
 	BIND_METHOD(JoltPhysicsServer3D, generic_6dof_joint_get_applied_force, "joint");
 	BIND_METHOD(JoltPhysicsServer3D, generic_6dof_joint_get_applied_torque, "joint");
 
+  	BIND_METHOD(JoltPhysicsServer3D, body_apply_buoyancy_impulse, "body", "surface_position", "surface_normal", "buoyancy", "linear_drag", "angular_drag", "fluid_velocity", "delta_time");
+  	
 	// clang-format on
 
 	BIND_ENUM_CONSTANT(HINGE_JOINT_LIMIT_SPRING_FREQUENCY);
@@ -900,6 +902,30 @@ void JoltPhysicsServer3D::_body_apply_impulse(
 
 	return body->apply_impulse(p_impulse, p_position);
 }
+
+void JoltPhysicsServer3D::body_apply_buoyancy_impulse(
+    const RID& p_body,
+    const Vector3& p_surface_position,
+    const Vector3& p_surface_normal,
+    float p_buoyancy,
+    float p_linear_drag,
+    float p_angular_drag,
+    const Vector3& p_fluid_velocity,
+    float p_delta_time
+) {
+  JoltBodyImpl3D* body = body_owner.get_or_null(p_body);
+  ERR_FAIL_NULL(body);
+
+  return body->apply_buoyancy_impulse(
+      p_surface_position,
+      p_surface_normal,
+      p_buoyancy,
+      p_linear_drag,
+      p_angular_drag,
+      p_fluid_velocity,
+      p_delta_time);
+}
+
 
 void JoltPhysicsServer3D::_body_apply_torque_impulse(const RID& p_body, const Vector3& p_impulse) {
 	JoltBodyImpl3D* body = body_owner.get_or_null(p_body);

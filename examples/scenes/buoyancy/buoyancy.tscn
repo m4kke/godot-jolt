@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://dvsi1r45sd35w"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dkpln"]
+size = Vector3(1, 0.2, 1)
+
+[sub_resource type="Environment" id="Environment_wgob6"]
+background_mode = 1
+
+[node name="Buoyancy" type="Node3D"]
+
+[node name="JoltBuoyantRigidBody3D" type="JoltBuoyantRigidBody3D" parent="."]
+buoyancy = 1.2
+linear_drag = 0.6
+angular_drag = 0.6
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="JoltBuoyantRigidBody3D"]
+transform = Transform3D(0.939693, -0.34202, 0, 0.34202, 0.939693, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_dkpln")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 2, 3)
+environment = SubResource("Environment_wgob6")
