@@ -1,7 +1,7 @@
 #pragma once
 
 class JoltBuoyantRigidBody3D final : public RigidBody3D {
-  GDCLASS_NO_WARN(JoltBuoyantRigidBody3D, RigidBody3D)
+  GDCLASS_QUIET(JoltBuoyantRigidBody3D, RigidBody3D)
 
 public:
 
