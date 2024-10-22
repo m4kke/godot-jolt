@@ -5,6 +5,7 @@
 
 JoltBuoyantRigidBody3D::JoltBuoyantRigidBody3D() : RigidBody3D() {
   set_liquid_plane(Plane(0, 1, 0, 0));
+  set_fluid_velocity(Vector3(0, 0, 0));
 }
 
 void JoltBuoyantRigidBody3D::_bind_methods() {
@@ -22,10 +23,17 @@ void JoltBuoyantRigidBody3D::_bind_methods() {
 
   BIND_METHOD(JoltBuoyantRigidBody3D, get_slide_angle_threshold);
   BIND_METHOD(JoltBuoyantRigidBody3D, set_slide_angle_threshold, "slide_angle_threshold");
+
+  BIND_METHOD(JoltBuoyantRigidBody3D, get_fluid_velocity);
+  BIND_METHOD(JoltBuoyantRigidBody3D, set_fluid_velocity, "fluid_velocity");
+
+  BIND_METHOD(JoltBuoyantRigidBody3D, buoyancy_integrate_forces, "state");
+
   ADD_PROPERTY(PropertyInfo(Variant::PLANE, "liquid_plane", PROPERTY_HINT_NONE, "suffix:m"), "set_liquid_plane", "get_liquid_plane");
   ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "buoyancy", PROPERTY_HINT_RANGE, "0.0,2.0,0.1,or_greater"), "set_buoyancy", "get_buoyancy");
   ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "linear_drag", PROPERTY_HINT_RANGE, "0.0,2.0,0.1,or_greater"), "set_linear_drag", "get_linear_drag");
   ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "angular_drag", PROPERTY_HINT_RANGE, "0.0,2.0,0.1,or_greater"), "set_angular_drag", "get_angular_drag");
+  ADD_PROPERTY(PropertyInfo(Variant::VECTOR3, "fluid_velocity", PROPERTY_HINT_NONE, "suffix:m"), "set_fluid_velocity", "get_fluid_velocity");
 }
 
 void JoltBuoyantRigidBody3D::set_liquid_plane(const Plane& p_plane) {
@@ -63,7 +71,6 @@ float JoltBuoyantRigidBody3D::get_angular_drag() const {
   return angular_drag;
 }
 
-void JoltBuoyantRigidBody3D::_integrate_forces(PhysicsDirectBodyState3D* p_state) {
 void JoltBuoyantRigidBody3D::set_slide_angle_threshold(float p_slide_angle_threshold) {
 	slide_angle_threshold = p_slide_angle_threshold;
 }
@@ -71,12 +78,27 @@ void JoltBuoyantRigidBody3D::set_slide_angle_threshold(float p_slide_angle_thres
 float JoltBuoyantRigidBody3D::get_slide_angle_threshold() const {
 	return slide_angle_threshold;
 }
+
+void JoltBuoyantRigidBody3D::set_fluid_velocity(const Vector3& p_fluid_velocity) {
+  fluid_velocity = p_fluid_velocity;
+}
+
+const Vector3& JoltBuoyantRigidBody3D::get_fluid_velocity() const {
+  return fluid_velocity;
+}
+
+
+void JoltBuoyantRigidBody3D::buoyancy_integrate_forces(PhysicsDirectBodyState3D* p_state) {
   JoltPhysicsDirectBodyState3D* p_jolt_state = (JoltPhysicsDirectBodyState3D*) p_state;
   p_jolt_state->apply_buoyancy_impulse(
       get_liquid_plane().center(),
       get_liquid_plane().normal,
       get_buoyancy(), get_linear_drag(), get_angular_drag(),
-      Vector3(0.0f, 0.0f, 0.0f),
+      get_fluid_velocity(),
       (float) p_jolt_state->get_step()
   );
+}
+
+void JoltBuoyantRigidBody3D::_integrate_forces(PhysicsDirectBodyState3D* p_state) {
+  buoyancy_integrate_forces(p_state);
 }
