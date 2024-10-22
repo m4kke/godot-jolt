@@ -5,4 +5,4 @@ cmake --preset windows-msvc-x64
 
 cmake --build --preset windows-msvc-x64-editor-distribution
 
-cmake --install build/windows-msvc-x64 --config EditorDistribution --prefix "C:\GitProjects\flood"
+cmake --install build/windows-msvc-x64 --config EditorDistribution --prefix "C:\Work\flood"
